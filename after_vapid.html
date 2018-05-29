@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Before VAPID</title>
+    <link rel="manifest" href="/manifest.json">
+
+</head>
+<body>
+
+
+<script type="text/javascript">
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+                .replace(/\-/g, '+')
+                .replace(/_/g, '/');
+
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    const vapidPublicKey = 'BI5eE7xYXOLY2k7apZpH2bvG_NI-fUjoFxHwysP7iwU3V7rRtQKOHLdkvolDB8Tt5Gz4ZgY2UyBo3YuNnzbyXRI';
+    const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+
+
+    if ('serviceWorker' in navigator)
+    {
+
+        navigator.serviceWorker.register('/sw.js').then
+        (
+                function(serviceWorkerRegistration)
+                {
+                    serviceWorkerRegistration.update();
+
+                    navigator.serviceWorker.ready.then(
+                            function(serviceWorkerRegistration)
+                            {
+                                serviceWorkerRegistration.pushManager.subscribe(
+                                        {
+                                            userVisibleOnly:true
+                                            ,applicationServerKey: convertedVapidKey
+                                        })
+                                        .then
+                                        (
+
+                                                function(pushSubscription)
+                                                {
+                                                    console.log(pushSubscription);
+                                                }, function(error)
+                                                {
+                                                    console.log(error);
+
+                                                }
+                                        )
+                                        .catch(function(error)
+                                        {
+                                            //DOMException: Registration failed - A subscription with a different applicationServerKey (or gcm_sender_id) already exists; to change the applicationServerKey, unsubscribe then resubscribe.
+                                            console.log(error);
+                                        });
+                            });
+
+                })
+                .catch(function(error)
+                {
+
+                    console.log(error);
+                });
+    }
+
+
+
+
+</script>
+
+</body>
+</html>
